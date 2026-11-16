@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import utcnow
-from app.models import AuditLog
+from app.models import AuditLog, Organization
 
 GENESIS_HASH = "0" * 64
 
@@ -45,9 +45,14 @@ async def record_audit(
 ) -> AuditLog:
     """Add an audit entry to the current transaction (the caller commits).
 
-    Note: two transactions writing at the same moment could read the same previous
-    hash. In production this would be serialised (e.g. a Postgres advisory lock).
+    Two requests of the same tenant writing at the same moment would both read the
+    same "previous" entry and fork the chain. So we first lock the organisation row
+    (SELECT ... FOR UPDATE): the second transaction waits until the first commits.
+    PostgreSQL only; SQLite (local development) has no row locks.
     """
+    await db.execute(
+        select(Organization.id).where(Organization.id == organization_id).with_for_update()
+    )
     previous = await db.scalar(
         select(AuditLog)
         .where(AuditLog.organization_id == organization_id)

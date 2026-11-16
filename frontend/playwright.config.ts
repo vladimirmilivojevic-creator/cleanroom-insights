@@ -7,6 +7,7 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   retries: process.env.CI ? 1 : 0,
+  workers: 1, // the e2e API runs on SQLite, which has no row locks for the audit chain
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: "http://localhost:3000",
