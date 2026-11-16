@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { buttonClass, inputClass } from "@/components/ui";
+import { API_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 const DEMO_ACCOUNTS = [
@@ -93,11 +94,56 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-400">
-            The API runs on a free hosting plan: the first request after a quiet period can take up to a minute.
-          </p>
+          <ApiStatus />
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * The API runs on a free plan that sleeps when idle. Pinging /health as soon as the
+ * login page opens wakes it up while the visitor is still reading, and tells them what is going on.
+ */
+function ApiStatus() {
+  const [online, setOnline] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function check() {
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        if (response.ok) {
+          if (!cancelled) setOnline(true);
+          return;
+        }
+      } catch {
+        // server still starting
+      }
+      if (!cancelled) {
+        setOnline(false);
+        timer = setTimeout(check, 4000);
+      }
+    }
+    check();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const [dot, text] =
+    online === null
+      ? ["bg-slate-300", "Checking the API…"]
+      : online
+        ? ["bg-emerald-500", "API online"]
+        : ["animate-pulse bg-amber-400", "Waking up the API (free hosting, up to a minute)…"];
+
+  return (
+    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500" data-testid="api-status">
+      <span className={`h-2 w-2 rounded-full ${dot}`} />
+      {text}
+    </p>
   );
 }
