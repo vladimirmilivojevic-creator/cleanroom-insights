@@ -1,0 +1,29 @@
+# Render Blueprint for the API (free plan).
+# PostgreSQL comes from Neon (free, does not expire); Redis is a free Render Key Value instance.
+services:
+  - type: web
+    name: cleanroom-insights-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    region: frankfurt
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set in the dashboard: the Neon connection string
+      - key: CORS_ORIGINS
+        sync: false # the dashboard URL, e.g. https://cleanroom-insights.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: cleanroom-insights-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: cleanroom-insights-redis
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: noeviction
+    ipAllowList: [] # only reachable from Render services

@@ -1,0 +1,14 @@
+# The free API instance sleeps after 15 minutes without traffic.
+# A light ping keeps the live demo responsive for visitors.
+name: Keep demo awake
+
+on:
+  schedule:
+    - cron: "*/10 6-20 * * 1-5" # every 10 minutes, working hours on weekdays (UTC)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl --silent --show-error --max-time 90 --retry 2 "${{ vars.API_URL }}/health"
