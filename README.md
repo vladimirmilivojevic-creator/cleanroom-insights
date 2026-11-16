@@ -108,7 +108,7 @@ python scripts/simulate_headset.py --email lukas@alpine.demo --module gowning --
 ## Tests
 
 ```bash
-cd backend && pytest                    # 58 tests, coverage report, fails under 85 % (currently ~97 %)
+cd backend && pytest                    # 59 tests, coverage report, fails under 85 % (currently ~97 %)
 cd frontend && npx playwright test      # starts API + dashboard, 8 browser tests
 ```
 

@@ -4,7 +4,10 @@ services:
   - type: web
     name: cleanroom-insights-api
     runtime: docker
-    rootDir: backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    buildFilter:
+      paths: ["backend/**"]
     plan: free
     region: frankfurt
     healthCheckPath: /health
